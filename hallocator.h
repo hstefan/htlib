@@ -1,6 +1,7 @@
 #ifndef HUGO_ALLOCATOR_H__
 #define HUGO_ALLOCATOR_H__
 
+#include <new>
 namespace htl
 {
     template <class T> class allocator;
@@ -95,8 +96,9 @@ namespace htl
     template <class T>
     void allocator<T>::construct(pointer p, const T& val)
     {
-        new ((void*)p) T(val);
+        new ((void*) p) T(val);
     }
+
     template <class T>
     void allocator<T>::destroy(pointer p)
     {

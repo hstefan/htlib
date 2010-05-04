@@ -85,12 +85,12 @@ namespace htl
 		Allocator myAllocator;
     };
 	template <class T, class Allocator>
-	explicit Vector<T, Allocator>::Vector(const Allocator& x = Allocator())
+	Vector<T, Allocator>::Vector(const Allocator& x = Allocator())
 		: myBegin(0), myCapacity(0), mySize(0), myAllocator(x)
 	{}
 
 	template <class T, class Allocator>
-	explicit Vector<T, Allocator>::Vector(size_type n, const T& value = T(), 
+	Vector<T, Allocator>::Vector(size_type n, const T& value = T(), 
 		const Allocator& x = Allocator())
 		: mySize(n), myCapacity(n), myAllocator(x)
 	{
@@ -114,10 +114,14 @@ namespace htl
 	
 	template <class T, class Allocator>
 	Vector<T, Allocator>::Vector(const Vector<T, Allocator>& x)
-		: myCapacity(x.max_size()), mySize(x.size())
+		: myCapacity(x.capacity()), mySize(x.size())
 	{
-		for(Vector::iterator i = x.begin(); i != x.end(); i++)
-			push_back(i*);
+        reserve(x.capacity());
+        for(size_type i = 0; i < x.size(); i++)
+        {
+            myBegin[i] = x[i];
+            mySize++;
+        }
 	}
 
 	template <class T, class Allocator>
@@ -134,9 +138,15 @@ namespace htl
 		myCapacity = x.capacity();
 		mySize = x.size();
 		myAllocator = x.get_allocator();
-		for(Vector::iterator i = x.begin(); i != x.end(), i++)
-			push_back(i*);
-		return this*;
+        if(!empty())
+            clear();
+        reserve(x.capacity());
+        for(size_type i = 0; i < x.size(); i++) 
+        {
+            myBegin[i] = x[i];
+            mySize++;
+        }
+		return *this;
 	}
 
 	template <class T, class Allocator>
@@ -151,49 +161,49 @@ namespace htl
 		}
 	}
 	template <class T, class Allocator>
-    allocator_type Vector<T, Allocator>::get_allocator() const
+    typename Vector<T, Allocator>::allocator_type Vector<T, Allocator>::get_allocator() const
 	{
 		return myAllocator;
 	}
 	
 	template <class T, class Allocator>
-	Vector<T, Allocator>::iterator begin()
+	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::begin()
 	{
 		return myBegin;
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::const_iterator begin() const
+	typename Vector<T, Allocator>::const_iterator Vector<T, Allocator>::begin() const
 	{
 		return myBegin;
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::iterator Vector<T, Allocator>::end()
+	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::end()
 	{
 		return myBegin + mySize;
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::const_iterator Vector<T, Allocator>::end() const
+	typename Vector<T, Allocator>::const_iterator Vector<T, Allocator>::end() const
 	{
 		return myBegin + mySize;
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::size_type Vector<T, Allocator>::size()
+	typename Vector<T, Allocator>::size_type Vector<T, Allocator>::size() const
 	{
 		return mySize;
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::max_size()
+	typename Vector<T, Allocator>::size_type Vector<T, Allocator>::max_size() const
 	{
 		return myAllocator.max_size();
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::size_type Vector<T, Allocator>::capacity()
+	typename Vector<T, Allocator>::size_type Vector<T, Allocator>::capacity() const
 	{
 		return myCapacity;
 	}
@@ -213,13 +223,7 @@ namespace htl
 	}
 
 	template <class T, class Allocator>
-	Vector<T, Allocator>::size_type Vector<T, Allocator>::capacity()
-	{
-		return myCapacity;
-	}
-
-	template <class T, class Allocator>
-	bool Vector<T, Allocator>::empty()
+	bool Vector<T, Allocator>::empty() const
 	{
 		return (myBegin == 0);
 	}
@@ -239,49 +243,49 @@ namespace htl
 	}
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::reference Vector<T, Allocator>::operator[] ( size_type n)
+    typename Vector<T, Allocator>::reference Vector<T, Allocator>::operator[] ( size_type n)
     {
         return myBegin[n];
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::const_reference Vector<T, Allocator>::operator[] (sizetype n) const
+    typename Vector<T, Allocator>::const_reference Vector<T, Allocator>::operator[] (size_type n) const
     {
         return myBegin[n];
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::const_reference Vector<T, Allocator>::at(size_type n) const
+    typename Vector<T, Allocator>::const_reference Vector<T, Allocator>::at(size_type n) const
     {
         return myBegin[n];
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::reference Vector<T, Allocator>::at(size_type n)
+    typename Vector<T, Allocator>::reference Vector<T, Allocator>::at(size_type n)
     {
         return myBegin[n];
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::reference Vector<T, Allocator>::front()
+    typename Vector<T, Allocator>::reference Vector<T, Allocator>::front()
     {
         return *myBegin;
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::const_reference Vector<T, Allocator>::front() const
+    typename Vector<T, Allocator>::const_reference Vector<T, Allocator>::front() const
     {
         return *myBegin;
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::reference Vector<T, Allocator>::back()
+    typename Vector<T, Allocator>::reference Vector<T, Allocator>::back()
     {
         return myBegin[mySize];
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::const_reference Vector<T, Allocator>::back() const
+    typename Vector<T, Allocator>::const_reference Vector<T, Allocator>::back() const
     {
         return myBegin[mySize];
     }
@@ -309,7 +313,7 @@ namespace htl
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::iterator Vector<T, Allocator>::insert(iterator position, const T& x)
+    typename Vector<T, Allocator>::iterator Vector<T, Allocator>::insert(iterator position, const T& x)
     {
         Vector<T, Allocator> v(begin(), position - 1);
         v.push_back(x);
@@ -345,9 +349,49 @@ namespace htl
     }
 
     template <class T, class Allocator>
-    Vector<T, Allocator>::iterator Vector<T, Allocator>::erase(iterator position)
+    typename Vector<T, Allocator>::iterator Vector<T, Allocator>::erase(iterator position)
     {
+       Vector<T, Allocator> v(begin(), position - 1);
+       for(iterator i = position + 1; i != end(); i++)
+           v.push_back(i);
+       *this = v;
+    }
 
+    template <class T, class Allocator>
+    typename Vector<T, Allocator>::iterator Vector<T, Allocator>::erase(iterator first, iterator last)
+    {
+        Vector<T, Allocator> v(begin(), first - 1);
+        for(iterator i = last + 1; i != end(); i++)
+            v.push_back();
+        *this = v;
+    }
+
+    template <class T, class Allocator>
+    void Vector<T, Allocator>::swap(Vector<T, Allocator>& vec)
+    {
+        Vector<T, Allocator> aux = vec;
+        vec = *this;
+        *this = aux;
+    }
+
+    template <class T, class Allocator>
+    void Vector<T, Allocator>::clear()
+    {
+        for(iterator i = begin(); i != end(); i++)
+        {
+            myAllocator.destroy(i);
+        }
+        myAllocator.deallocate(myBegin);
+        mySize = 0;
+        myCapacity = 0;
+        myBegin = 0;
+    }
+
+    template <class T, class Allocator>
+    typename Vector<T, Allocator>::size_type Vector<T,Allocator>::calculate_size()
+    {
+        return myCapacity*2;
     }
 }
+
 #endif

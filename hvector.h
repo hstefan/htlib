@@ -17,7 +17,7 @@ namespace htl
         typedef size_t				                            size_type;
         typedef size_t                                          difference_type;
         typedef T                                               value_type;
-        typedef Allocator										allocator_type;
+        typedef Allocator								        allocator_type;
         typedef typename Allocator::pointer                     pointer;
         typedef typename Allocator::const_pointer               const_pointer;
         //typedef reverse_iterator<iterator>                      reverse_iterator;
@@ -78,7 +78,7 @@ namespace htl
         void swap(Vector<T, Allocator>&);
         void clear();
     private:
-		void alloc_capacity(size_type n);
+		size_type calculate_size();
         T* myBegin;
         size_type myCapacity;
         size_type mySize;
@@ -95,6 +95,7 @@ namespace htl
 		: mySize(n), myCapacity(n), myAllocator(x)
 	{
 		myBegin = myAllocator.allocate(n);
+        myAllocator.construct(myBegin, T());
 		for(Vector::iterator v = begin(); v++; v != end())
 			push_back(n);
 	}
@@ -123,6 +124,7 @@ namespace htl
 	Vector<T, Allocator>::~Vector()
 	{
 		if(myBegin != 0)
+            myAllocator.destroy(myBegin);
 			myAllocator.deallocate(myBegin);
 	}
 
@@ -149,7 +151,7 @@ namespace htl
 		}
 	}
 	template <class T, class Allocator>
-	Vector<T, Allocator>::allocator_type get_allocator()
+    allocator_type Vector<T, Allocator>::get_allocator() const
 	{
 		return myAllocator;
 	}
@@ -200,8 +202,14 @@ namespace htl
 	void Vector<T, Allocator>::resize(size_type sz, T c = T())
 	{
 		Vector<T, Allocator> x = *this;
-		clear();
-		*this = x;
+		for(iterator i = begin(); i != end(); i++)
+        {
+            myAllocator.destroy(*i);
+        }
+        myAllocator.deallocate(myBegin);
+        myBegin = myAllocator.allocate(sz);
+        myAllocator.construct(p, T());
+        this->assign(x.begin(), x.end());
 	}
 
 	template <class T, class Allocator>
@@ -213,22 +221,133 @@ namespace htl
 	template <class T, class Allocator>
 	bool Vector<T, Allocator>::empty()
 	{
-		return (begin == 0);
+		return (myBegin == 0);
 	}
 
 	template <class T, class Allocator>
 	void Vector<T, Allocator>::reserve(size_type n)
 	{
-		Vector<T, Allocator> = *this;
-		alloc_capacity(n);
+		Vector<T, Allocator> x(*this);
+		if(myBegin != 0)
+        {
+            myAllocator.destroy(myBegin);
+            myAllocator.deallocate(myBegin);
+        }
+        myBegin = myAllocator.allocate(n);
+        *this = x;
+        myCapacity = n;
 	}
 
-	template <class T, class Allocator>
-	void Vector<T, Allocator>::alloc_capacity(size_type n)
-	{
-		myAllocator.deallocate(myBegin);
-		myBegin = myAllocator.allocate(n);
-		myCapacity = n;
-	}
+    template <class T, class Allocator>
+    Vector<T, Allocator>::reference Vector<T, Allocator>::operator[] ( size_type n)
+    {
+        return myBegin[n];
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::const_reference Vector<T, Allocator>::operator[] (sizetype n) const
+    {
+        return myBegin[n];
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::const_reference Vector<T, Allocator>::at(size_type n) const
+    {
+        return myBegin[n];
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::reference Vector<T, Allocator>::at(size_type n)
+    {
+        return myBegin[n];
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::reference Vector<T, Allocator>::front()
+    {
+        return *myBegin;
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::const_reference Vector<T, Allocator>::front() const
+    {
+        return *myBegin;
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::reference Vector<T, Allocator>::back()
+    {
+        return myBegin[mySize];
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::const_reference Vector<T, Allocator>::back() const
+    {
+        return myBegin[mySize];
+    }
+
+    template <class T, class Allocator>
+    void Vector<T, Allocator>::push_back(const T& x)
+    {
+        if(myCapacity - mySize <= 0)
+        {
+            reserve(calculate_size());
+            myAllocator.construct(&myBegin[mySize], x);
+        }
+        else
+        {
+            myAllocator.construct(&myBegin[mySize], x);
+        }
+        mySize++;
+    }
+
+    template <class T, class Allocator>
+    void Vector<T, Allocator>::pop_back()
+    {
+        myAllocator.destroy(&myBegin[mySize - 1]);
+        mySize--;
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::iterator Vector<T, Allocator>::insert(iterator position, const T& x)
+    {
+        Vector<T, Allocator> v(begin(), position - 1);
+        v.push_back(x);
+        iterator ret = v.end();
+        for(iterator i = position; i != end(); i++)
+            v.push_back(*i);
+
+        *this = v;
+        return ret;
+    }
+    
+    template <class T, class Allocator>
+    void Vector<T, Allocator>::insert(iterator position, size_type n, const T& x)
+    {
+        Vector<T, Allocator> v(begin(), position - 1);
+        for(size_type i = 0; i < n; i++)
+            v.push_back(x);
+        for(iterator it = position; position != end(); i++)
+            v.push_back(x);
+        *this = v;
+    }
+
+    template <class T, class Allocator>
+    template <class InputIterator>
+    void Vector<T, Allocator>::insert(iterator position, InputIterator first, InputIterator last)
+    {
+        Vector<T, Allocator> v(begin(), position);
+        for(; first != last; last++)
+            v.push_back(*first);
+        for(; position != end(); position++)
+            v.push_back(*position);
+        *this = v;
+    }
+
+    template <class T, class Allocator>
+    Vector<T, Allocator>::iterator Vector<T, Allocator>::erase(iterator position)
+    {
+
+    }
 }
 #endif

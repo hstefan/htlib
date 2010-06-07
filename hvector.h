@@ -1,6 +1,6 @@
 #ifndef HUGO_VECTOR_H__
 #define HUGO_VECTOR_H__
-
+#include <vector>
 #include "hallocator.h"
 
 namespace htl
@@ -14,12 +14,12 @@ namespace htl
 		typedef typename Allocator::const_reference             const_reference;
 		typedef typename Allocator::pointer                     iterator;
 		typedef typename Allocator::const_pointer				const_iterator;
+		typedef typename Allocator::pointer                     pointer;
+		typedef typename Allocator::const_pointer				const_pointer;
 		typedef size_t				                            size_type;
 		typedef size_t                                          difference_type;
 		typedef T                                               value_type;
 		typedef Allocator								        allocator_type;
-		typedef typename Allocator::pointer                     pointer;
-		typedef typename Allocator::const_pointer               const_pointer;
 		//typedef reverse_iterator<iterator>                      reverse_iterator;
 		//typedef reverse_iterator<const_iterator>                const_reverse_iterator;
 
@@ -79,11 +79,15 @@ namespace htl
 		void clear();
 	private:
 		size_type calculate_size();
+		pointer ureserve_construct(size_type n);
+		void udestroy();
+
 		T* myBegin;
 		size_type myCapacity;
 		size_type mySize;
 		Allocator myAllocator;
 	};
+	
 	template <class T, class Allocator>
 	Vector<T, Allocator>::Vector(const Allocator& x = Allocator())
 		: myBegin(0), myCapacity(0), mySize(0), myAllocator(x)
@@ -92,24 +96,33 @@ namespace htl
 	template <class T, class Allocator>
 	Vector<T, Allocator>::Vector(size_type n, const T& value = T(), 
 		const Allocator& x = Allocator())
-		: mySize(n), myCapacity(n), myAllocator(x)
+		: mySize(0), myCapacity(n), myAllocator(x)
 	{
-		myBegin = myAllocator.allocate(n);
-		myAllocator.construct(myBegin, T());
-		for(Vector::iterator v = begin(); v++; v != end())
-			push_back(n);
+		ureserve_construct(myCapacity);
+		for(int i = 0; i < myCapacity; i++) 
+			myBegin[i] = T(value);
+	}
+
+	template <class T, class Allocator>
+	Vector<T, Allocator>::ureserve_construct(size_type n) 
+	{
+		reserve(n);
+		this->myAllocator.construct(myBegin, T());
 	}
 
 	template <class T, class Allocator>
 	template <class InputIterator>
 	Vector<T, Allocator>::Vector(InputIterator first, InputIterator last,
-		const Allocator& = Allocator())
+		const Allocator& x = Allocator())
+		: myAllocator(x)
 	{
-		reserve((last - first)/sizeof(InputIterator));
-		while(first != last)
+		mySize = (last - first)/sizeof(InputIterator) + 1;
+		ureserve_construct(mySize);
+		for(InputIterator adr = first, pointer ptr = myBegin;; adr++, ptr++)
 		{
-			push_back(*first);
-			first++;
+			*ptr = *adr;
+			if(adr = ptr) 
+				break;
 		}
 	}
 
@@ -117,50 +130,55 @@ namespace htl
 	Vector<T, Allocator>::Vector(const Vector<T, Allocator>& x)
 		: myCapacity(x.capacity()), mySize(x.size())
 	{
-		reserve(x.capacity());
-		for(size_type i = 0; i < x.size(); i++)
-		{
-			myBegin[i] = x[i];
-			mySize++;
-		}
+		ureserve_construct(x.capacity());
+		for(int i = 0; i < mySize; i++) 
+			myBegin[i] = T(x[i]);
 	}
 
 	template <class T, class Allocator>
 	Vector<T, Allocator>::~Vector()
 	{
-		if(myBegin != 0)
+		if(myBegin != 0) 
+		{
 			myAllocator.destroy(myBegin);
-		myAllocator.deallocate(myBegin);
+			myAllocator.deallocate(myBegin);
+		}
 	}
 
 	template <class T, class Allocator>
 	Vector<T, Allocator>& Vector<T, Allocator>::operator=(const Vector<T, Allocator>& x)
 	{
-		myCapacity = x.capacity();
 		mySize = x.size();
-		myAllocator = x.get_allocator();
-		if(!empty())
+		myCapacity = x.capacity();		
+		if(!this->empty()) 
 			clear();
-		reserve(x.capacity());
-		for(size_type i = 0; i < x.size(); i++) 
-		{
-			myBegin[i] = x[i];
-			mySize++;
-		}
-		return *this;
+		ureserve_construct(myCapacity);		
+		for(int i = 0; i < mySize; i++) 
+			myAllocator.construct(&myBegin[i], x[i]);
 	}
 
 	template <class T, class Allocator>
+	void Vector<T, Allocator>::udestroy() 
+	{
+		if(!empty()) 
+			delete[] myBegin;
+		mySize = 0;
+		myBegin = 0;
+		myCapacity = 0;
+	}
+	
+	template <class T, class Allocator>
 	template <class InputIterator>
 	void Vector<T, Allocator>::assign(InputIterator first, InputIterator last)
-	{
-		mySize = (size_type) ((last - first)/sizeof(InutIterator));
-		while(first != last)
+	{	
+		udestroy();
+		do 
 		{
-			push_Back(first*);
+			this->push_back(*first);
 			first++;
-		}
+		} while (first != last);
 	}
+
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::allocator_type Vector<T, Allocator>::get_allocator() const
 	{
@@ -182,13 +200,13 @@ namespace htl
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::end()
 	{
-		return myBegin + mySize;
+		return myBegin + mySize - 1;
 	}
 
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::const_iterator Vector<T, Allocator>::end() const
 	{
-		return myBegin + mySize;
+		return myBegin + mySize - 1;
 	}
 
 	template <class T, class Allocator>
@@ -212,15 +230,14 @@ namespace htl
 	template <class T, class Allocator>
 	void Vector<T, Allocator>::resize(size_type sz, T c = T())
 	{
-		Vector<T, Allocator> x = *this;
-		for(iterator i = begin(); i != end(); i++)
+		if(sz < mySize) 
+			mySize = sz;
+		else if(sz > mySize)
 		{
-			myAllocator.destroy(*i);
+			for(int i = sz - mySize; i >= 0; i--)
+				push_back(c);
+			mySize = sz;
 		}
-		myAllocator.deallocate(myBegin);
-		myBegin = myAllocator.allocate(sz);
-		myAllocator.construct(p, T());
-		this->assign(x.begin(), x.end());
 	}
 
 	template <class T, class Allocator>
@@ -231,19 +248,18 @@ namespace htl
 
 	template <class T, class Allocator>
 	void Vector<T, Allocator>::reserve(size_type n)
-	{
-		T* old = myBegin;
-		if(myBegin != 0)
-			myAllocator.destroy(myBegin);
-
-		myBegin = myAllocator.allocate(n);
-		for(size_type i = 0; i < n; i++)
+	{ //critical method
+		if(n > myCapacity)
 		{
-			myBegin[i] = old[i];
+			pointer old_aray = myBegin;
+			myBegin = myAllocator.allocate(n);
+			myCapacity = n;
+			
+			for(int i = 0; i < mySize; i++)
+				myAllocator.construct(&myBegin[i], old_aray[i]);
+
+			delete[] old_aray;
 		}
-		myCapacity = n;
-		myAllocator.destroy(old);
-		myAllocator.deallocate(old);
 	}
 
 	template <class T, class Allocator>
@@ -303,15 +319,14 @@ namespace htl
 			myAllocator.construct(&myBegin[mySize], x);
 		}
 		else
-		{
 			myAllocator.construct(&myBegin[mySize], x);
-		}
 		mySize++;
 	}
 
 	template <class T, class Allocator>
 	void Vector<T, Allocator>::pop_back()
 	{
+		if(mySize <= 0) return;
 		myAllocator.destroy(&myBegin[mySize - 1]);
 		mySize--;
 	}
@@ -319,14 +334,8 @@ namespace htl
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::insert(iterator position, const T& x)
 	{
-		Vector<T, Allocator> v(begin(), position - 1);
-		v.push_back(x);
-		iterator ret = v.end();
-		for(iterator i = position; i != end(); i++)
-			v.push_back(*i);
-
-		*this = v;
-		return ret;
+		pointer old_array = myBegin;
+		//stopped here
 	}
 
 	template <class T, class Allocator>

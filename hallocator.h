@@ -83,7 +83,7 @@ namespace htl
 	template <class T>
 	void allocator<T>::deallocate(pointer p, size_type n = 0)
 	{
-		delete p;
+		delete[] p;
 	}
 
 	template <class T>

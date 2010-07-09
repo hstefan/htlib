@@ -2,6 +2,7 @@
 #define HUGO_ALLOCATOR_H__
 
 #include <new>
+
 namespace htl
 {
 	template <class T> class allocator;

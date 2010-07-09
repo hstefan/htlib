@@ -1,7 +1,8 @@
 #ifndef HUGO_VECTOR_H__
 #define HUGO_VECTOR_H__
-#include <vector>
+
 #include "hallocator.h"
+#include "hiterator.h"
 
 namespace htl
 {
@@ -12,8 +13,8 @@ namespace htl
 		//types
 		typedef typename Allocator::reference                   reference;
 		typedef typename Allocator::const_reference             const_reference;
-		typedef typename Allocator::pointer                     iterator;
-		typedef typename Allocator::const_pointer				const_iterator;
+		typedef typename randomAcessIterator<T>                 iterator;
+		typedef typename randomAcessIterator<T>					const_iterator;
 		typedef typename Allocator::pointer                     pointer;
 		typedef typename Allocator::const_pointer				const_pointer;
 		typedef size_t				                            size_type;
@@ -79,7 +80,6 @@ namespace htl
 		void clear();
 	private:
 		size_type calculate_size();
-		pointer ureserve_construct(size_type n);
 		void udestroy();
 
 		T* myBegin;
@@ -98,41 +98,27 @@ namespace htl
 		const Allocator& x = Allocator())
 		: mySize(0), myCapacity(n), myAllocator(x)
 	{
-		ureserve_construct(myCapacity);
+		reserve(myCapacity);
 		for(int i = 0; i < myCapacity; i++) 
-			myBegin[i] = T(value);
-	}
-
-	template <class T, class Allocator>
-	Vector<T, Allocator>::ureserve_construct(size_type n) 
-	{
-		reserve(n);
-		this->myAllocator.construct(myBegin, T());
+			myAllocator.construct(&myBegin[i], value);
 	}
 
 	template <class T, class Allocator>
 	template <class InputIterator>
 	Vector<T, Allocator>::Vector(InputIterator first, InputIterator last,
 		const Allocator& x = Allocator())
-		: myAllocator(x)
+		: myAllocator(x), myBegin(0), myCapacity(0), mySize(0)
 	{
-		mySize = (last - first)/sizeof(InputIterator) + 1;
-		ureserve_construct(mySize);
-		for(InputIterator adr = first, pointer ptr = myBegin;; adr++, ptr++)
-		{
-			*ptr = *adr;
-			if(adr = ptr) 
-				break;
-		}
+		for(InputIterator adr = first; adr != last; adr++)
+			push_back(*adr);
 	}
 
 	template <class T, class Allocator>
 	Vector<T, Allocator>::Vector(const Vector<T, Allocator>& x)
-		: myCapacity(x.capacity()), mySize(x.size())
+		: myAllocator(Allocator()), myCapacity(0), mySize(0), myBegin(0)
 	{
-		ureserve_construct(x.capacity());
-		for(int i = 0; i < mySize; i++) 
-			myBegin[i] = T(x[i]);
+		for(unsigned int i = 0; i < x.size(); i++) 
+			push_back(x[i]);
 	}
 
 	template <class T, class Allocator>
@@ -148,13 +134,11 @@ namespace htl
 	template <class T, class Allocator>
 	Vector<T, Allocator>& Vector<T, Allocator>::operator=(const Vector<T, Allocator>& x)
 	{
-		mySize = x.size();
-		myCapacity = x.capacity();		
-		if(!this->empty()) 
-			clear();
-		ureserve_construct(myCapacity);		
-		for(int i = 0; i < mySize; i++) 
-			myAllocator.construct(&myBegin[i], x[i]);
+		mySize = 0;
+		myCapacity = 0;
+		for(size_type i = 0; i < x.size(); i++) 
+			push_back(x[i]);
+		return *this;
 	}
 
 	template <class T, class Allocator>
@@ -172,11 +156,14 @@ namespace htl
 	void Vector<T, Allocator>::assign(InputIterator first, InputIterator last)
 	{	
 		udestroy();
-		do 
+		reserve(first - last + 1);
+		while(1)
 		{
 			this->push_back(*first);
+			if(first == last) 
+				break;
 			first++;
-		} while (first != last);
+		}
 	}
 
 	template <class T, class Allocator>
@@ -188,25 +175,25 @@ namespace htl
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::begin()
 	{
-		return myBegin;
+		return iterator(myBegin);
 	}
 
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::const_iterator Vector<T, Allocator>::begin() const
 	{
-		return myBegin;
+		return iterator(myBegin);
 	}
 
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::end()
 	{
-		return myBegin + mySize - 1;
+		return iterator(myBegin + mySize);
 	}
 
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::const_iterator Vector<T, Allocator>::end() const
 	{
-		return myBegin + mySize - 1;
+		return iterator(myBegin + mySize);
 	}
 
 	template <class T, class Allocator>
@@ -248,17 +235,18 @@ namespace htl
 
 	template <class T, class Allocator>
 	void Vector<T, Allocator>::reserve(size_type n)
-	{ //critical method
+	{
 		if(n > myCapacity)
 		{
-			pointer old_aray = myBegin;
+			pointer old_array = myBegin;
 			myBegin = myAllocator.allocate(n);
 			myCapacity = n;
-			
-			for(int i = 0; i < mySize; i++)
-				myAllocator.construct(&myBegin[i], old_aray[i]);
-
-			delete[] old_aray;
+			if(old_array != 0) 
+			{
+				for(size_type i = 0; i < mySize; i++)
+					myAllocator.construct(&myBegin[i], old_array[i]);
+				delete[] old_array;
+			}
 		}
 	}
 
@@ -301,19 +289,19 @@ namespace htl
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::reference Vector<T, Allocator>::back()
 	{
-		return myBegin[mySize];
+		return myBegin[mySize - 1];
 	}
 
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::const_reference Vector<T, Allocator>::back() const
 	{
-		return myBegin[mySize];
+		return myBegin[mySize - 1];
 	}
 
 	template <class T, class Allocator>
 	void Vector<T, Allocator>::push_back(const T& x)
 	{
-		if(myCapacity - mySize <= 0)
+		if(mySize >= myCapacity)
 		{
 			reserve(calculate_size());
 			myAllocator.construct(&myBegin[mySize], x);
@@ -364,10 +352,15 @@ namespace htl
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::iterator Vector<T, Allocator>::erase(iterator position)
 	{
-		Vector<T, Allocator> v(begin(), position - 1);
-		for(iterator i = position + 1; i != end(); i++)
-			v.push_back(i);
+		iterator it = position;
+		it--;
+		Vector<T, Allocator> v(begin(), it);
+		it++, it++;
+		for(; it != end(); it++)
+			v.push_back(*it);
+		clear();
 		*this = v;
+		return v.begin();
 	}
 
 	template <class T, class Allocator>
@@ -393,9 +386,8 @@ namespace htl
 		if(empty())
 			return;
 		for(iterator i = begin(); i != end(); i++)
-		{
-			myAllocator.destroy(i);
-		}
+			myAllocator.destroy(&(*i));
+
 		myAllocator.deallocate(myBegin);
 		mySize = 0;
 		myCapacity = 0;
@@ -405,7 +397,7 @@ namespace htl
 	template <class T, class Allocator>
 	typename Vector<T, Allocator>::size_type Vector<T,Allocator>::calculate_size()
 	{
-		return myCapacity*2;
+		return myCapacity*2 + 1;
 	}
 }
 

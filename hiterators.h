@@ -3,6 +3,7 @@
 
 namespace htl
 {
+
 	template <class T>
 	class randomAcessIterator 
 	{
@@ -65,6 +66,54 @@ namespace htl
 	private:
 		pointer ptr;
 	};
+
+	template <class T, class C>
+	class bidirectionalIterator
+		{
+		public:
+			typedef C				container;
+			typedef T*				pointer;
+			typedef T&				reference;
+			typedef T				value_type;
+			typedef unsigned int	diff_type;
+			bidirectionalIterator(C* x = 0);
+			bidirectionalIterator(const bidirectionalIterator<T, C>& it);
+			
+			bidirectionalIterator& operator=(const bidirectionalIterator<T, C>& it)
+			{
+				ptr = it.ptr;
+				return *this;
+			}
+			bidirectionalIterator& operator++()
+			{
+				ptr = ptr->next;
+				return *this;
+			}
+			bidirectionalIterator& operator++(int)
+			{
+				ptr = ptr->next;
+				return *this;
+			}
+			bidirectionalIterator& operator--()
+			{   
+				ptr = ptr->prev;
+				return *this;
+			}
+			bidirectionalIterator& operator--(int)
+			{
+				ptr = ptr->prev;
+				return *this;
+			}
+			bidirectionalIterator& operator==(const bidirectionalIterator<T,C>& it)
+			{ return ptr == it; }
+			bidirectionalIterator& operator!=(const bidirectionalIterator<T,C>& it)
+			{ return ptr != it; }
+			reference operator*()
+			{ return ptr->value;}
+
+		private:
+			C* ptr;
+		};
 }
 
 #endif

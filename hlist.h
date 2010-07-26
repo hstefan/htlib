@@ -2,20 +2,74 @@
 #define HUGO_H_LIST__
 
 #include "hallocator.h"
-#include "hiterators.h" 
+#include "hlist_node.h"
 
 namespace htl 
 {
+	namespace detail 
+	{
+		template <class T>
+		class list_iterator 
+		{
+		public:
+			typedef T*					pointer;
+			typedef T&					reference;
+			typedef T					value_type;
+			typedef unsigned int		diff_type;
+			list_iterator(const hlist_node<T>& i);
+			list_iterator(const list_iterator<T>& it);
+			
+			list_iterator& operator=(const list_iterator<T>& it)
+			{
+				ptr = it.ptr;
+				return *this;
+			}
+			list_iterator& operator++()
+			{
+				ptr = ptr->next;
+				return *this;
+			}
+			list_iterator& operator++(int)
+			{
+				list_iterator i = *this;
+				ptr = ptr->next;
+				return i;
+			}
+			list_iterator& operator--()
+			{   
+				ptr = ptr->prev;
+				return *this;
+			}
+			list_iterator& operator--(int)
+			{
+				list_iterator i = *this;
+				ptr = ptr->prev;
+				return i;
+			}
+			list_iterator& operator==(const list_iterator<T>& it)
+			{ return ptr == it->ptr; }
+			list_iterator& operator!=(const list_iterator<T>& it)
+			{ return ptr != it->ptr; }
+			reference operator*()
+			{ return ptr->value;}
+
+		private:
+			template <class T>
+			friend class list;
+
+			hlist_node<T>* ptr;
+		};
+	} 
+
 	template <class T, class Allocator = allocator<T> >
 	class list 
 	{
-		class node;
 	public:
 		// types:
 		typedef typename Allocator::reference							reference;
 		typedef typename Allocator::const_reference						const_reference;		
-		typedef typename bidirectionalIterator<T, node>					iterator; 
-		typedef typename bidirectionalIterator<T, node>					const_iterator;
+		typedef typename detail::list_iterator<T>						iterator; 
+		typedef typename detail::list_iterator<T>						const_iterator;
 		typedef unsigned int											size_type;
 		typedef unsigned int											difference_type;
 		typedef T														value_type;
@@ -102,23 +156,15 @@ namespace htl
 		void reverse();
 	
 	protected:
-		class node
-		{
-		public:
-			node(const_reference val, node* prv = 0, node* nxt = 0)
-				: value(val), next(nxt), prev(prv)
-			{}
-			node* next;
-			node* prev;
-			value_type value;
-		};
 
-		node* first;
-		node* last;
+		detail::hlist_node<T>* first;
+		detail::hlist_node<T>* last;
 		size_type m_size;
 		Allocator alloc;
-	};
 
+		template <typename T>
+		friend class detail::list_iterator;
+	};
 	template <class T, class Allocator>
 	list<T,Allocator>::list(const Allocator& x = Allocator())
 		: first(0),  last(0), m_size(0), alloc(x)
@@ -166,11 +212,7 @@ namespace htl
 	template <class T, class Allocator>
 	list<T, Allocator>::~list()
 	{
-		while(first != last)
-		{
-			first++;
-			delete first->prev;
-		}
+		//todo
 	}
 
 	template <class T, class Allocator>
@@ -242,12 +284,12 @@ namespace htl
 	{
 		if(first == 0)
 		{
-			first = new node(x);
+			first = new detail::hlist_node<T>(x, 0, 0);
 			last = first;
 		}
 		else
 		{
-			node* n = new node(x, 0, first);
+			detail::hlist_node<T>* n = new detail::hlist_node<T>(x, 0, first);
 			first->prev = n;
 			first = n;
 		}
@@ -258,7 +300,7 @@ namespace htl
 	{
 		if(first != 0)
 		{
-			node* n = first;
+			detail::hlist_node<T>* n = first;
 			first = first->next;
 			delete n;
 		}
@@ -269,15 +311,26 @@ namespace htl
 	{
 		if(last == 0)
 		{
-			first = new node(x);
+			first = new detail::hlist_node<T>(x);
 			last = first;
 		}
-		else
+		elseor
 		{
-			node* n = new node(x, last, 0);
+			detail::hlist_node<T>* n = new detail::hlist_node<T>(x, last, 0);
 			last->next = n;
 			last = n;
 		}
+		m_size++;
+	}
+
+	template <class T, class Allocator>
+	void list<T, Allocator>::erase(iterator position)
+	{
+		if(position.ptr != 0){
+			;
+		}
+		else
+			;
 	}
 }
 

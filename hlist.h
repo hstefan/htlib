@@ -365,7 +365,7 @@ namespace htl
 				first = position.ptr->next;
 			
 			if(position.ptr->next != 0)
-				position.ptr->prev->next->prev = position.ptr->prev;
+				position.ptr->next->prev = position.ptr->prev;
 			else //the element was the last in the list
 				last = position.ptr->prev;
 			

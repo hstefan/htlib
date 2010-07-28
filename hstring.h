@@ -27,6 +27,7 @@
 
 #include "hllocator.h"
 #include "hvector.h"
+
 namespace htl
 {
 	template <class charT, class Allocator = allocator<charT>>
@@ -52,10 +53,12 @@ namespace htl
 		basic_string(const basic_string& str, size_type pos, size_type n = npos,
 			const Allocator& a = Allocator());
 		basic_string(const charT* s, size_type n, const Allocator& a = Allocator);
-		basic_string(const charT* s, charT c, const Allocator& a = Allocator());
+		basic_string(const charT* s, const Allocator& a = Allocator());
+		basic_string(size_type n, charT c, const Allocator& a = Allocator());
 		
 		template <class InputIterator>
 		basic_string(InputIterator begin, InputIterator end, const Allocator& a = Allocator);
+		
 		~basic_string();
 		basic_string& operator=(const basic_string& str);
 		basic_string& operator=(const charT* s);
@@ -69,17 +72,67 @@ namespace htl
 
 	template <class charT, class Allocator>
 	basic_string<charT, Allocator>::basic_string(const Allocator& a)
-		: vec(vector<T, Allocator>)
+		: vec(a)
+	{}
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::basic_string(const basic_string<charT, Allocator>& str)
+		: vec(str.get_allocator())
 	{
-		iterator it = a.begin();
-		while(it != a.end)
-			vec.push_back(*it)
+		iterator it = str.begin();
+		while it != str.end()
+		{
+			vec.push_back(*it);
+			it++;
+		}
 	}
 
 	template <class charT, class Allocator>
+	basic_string<charT, Allocator::basic_string(const basic_string<charT, Allocator>& str,
+		size_type pos, size_type n, const Allocator& a)
+		: vec(a)
+	{
+		*this = str.substring(pos, n);
+	}
+
 	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::basic_string(const charT* s, size_type n, const Allocator& a = Allocator)
+		: vec(a)
+	{
+		for(int i = 0; i < n; i++)
+			push_back(s[i]);
+	}
+
 	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::basic_string(const charT* s,const Allocator& a = Allocator())
+		: vec(a)
+	{
+		for(int i = 0; s[i] != '\0'; i++)
+			push_back(s[i]);
+	}
+
 	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::basic_string(size_type n, charT c, const Allocator a)
+		: vec(a)
+	{
+		while(n > 0)
+		{
+			push_back(c);
+			n--;
+		}
+	}
+	template <class charT, class Allocator>
+	template <class InputIterator>
+	basic_string<charT, Allocator>::basic_string(InputIterator begin, InputIterator end, 
+			const Allocator& a)
+		: vec(a)
+	{
+		while(begin != end)
+		{
+			push_back(*begin);
+			begin++;
+		}
+	}
 }
 
 #endif

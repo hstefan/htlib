@@ -65,7 +65,36 @@ namespace htl
 		basic_string& operator=(charT c);
 
 		//iterators	
+		iterator		begin();
+		const_iterator	begin() const;
+		iterator		end();
+		const_iterator	end() const;
+
+		//capacity
+		size_type size() const;
+		size_type length() const;
+		size_type max_size() const;
+		void resize(size_type n, charT c);
+		void resize(size_type n);
+		size_type capacity() const;
+		void reserve(size_type res_arg = 0);
+		void clear();
+		bool empty() const;
 		
+		//modifiers
+		basic_string& operator +=(const basic_string& str);
+		basic_string& operator +=(const charT* s);
+		basic_string& operator +=(charT c);
+		basic_string& append(const basic_string& str);
+		basic_string& append(const basic_string& str, size_type pos,
+			size_type n);
+		basic_string& append(const charT* s, size_type n);
+		basic_string& append(const charT* s);
+		basic_string& append(size_type n, charT c);
+		template <class InputIterator>
+			basic_string& append& append(InputIterator first, InputIterator last);
+		void push_back(charT c);
+
 	private:
 		vector<T, Allocator> vec;
 	};
@@ -99,7 +128,7 @@ namespace htl
 	basic_string<charT, Allocator>::basic_string(const charT* s, size_type n, const Allocator& a = Allocator)
 		: vec(a)
 	{
-		for(int i = 0; i < n; i++)
+		for(size_type i = 0; i < n; i++)
 			push_back(s[i]);
 	}
 
@@ -107,7 +136,7 @@ namespace htl
 	basic_string<charT, Allocator>::basic_string(const charT* s,const Allocator& a = Allocator())
 		: vec(a)
 	{
-		for(int i = 0; s[i] != '\0'; i++)
+		for(size_type i = 0; s[i] != '\0'; i++)
 			push_back(s[i]);
 	}
 
@@ -133,6 +162,176 @@ namespace htl
 			begin++;
 		}
 	}
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::~basic_string()
+	{}
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::operator=(const basic_string<charT, Allocator>& str)
+	{
+		vec.clear();
+		iterator it = str.begin();
+		while(it != str.end())
+		{
+			vec.push_back(*it);
+			it++;
+		}
+	}
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::operator=(const charT* s)
+	{
+		vec.clear();
+		for(size_type i = 0; s[i] != '\0'; i++)
+			vec.push_back(s[i]);
+	}
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::operator=(charT c)
+	{
+		vec.clear();
+		vec.push_back(c);
+	}
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::iterator basic_string<charT, Allocator>::begin()
+	{ return vec.begin(); }
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::const_iterator basic_string<charT, Allocator>::begin() const
+	{ return vec.begin(); }
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::iterator basic_string<charT, Allocator>::end()
+	{ return vec.end(); }
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::const_iterator basic_string<charT, Allocator>::end()
+	{ return vec.end(); }
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::size_type basic_string<charT, Allocator>::size() const
+	{ return vec.size(); }
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::size_type basic_string<charT, Allocator>::length() const
+	{ return vec.size(); }
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::size_type basic_string<charT, Allocator>::max_size() const
+	{ return vec.max_size(); }
+
+	template <class charT, class Allocator>
+	void basic_string<charT, Allocator>::resize(size_type n, charT c)
+	{ vec.resize(n, c); }
+	
+	template <class charT, class Allocator>
+	void basic_string<charT, Allocator>::resize(size_type n)
+	{ vec.resize(n); }
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>::size_type basic_string<charT, Allocator>::capacity() const
+	{ return vec.capacity(); }
+
+	template <class charT, class Allocator>
+	void basic_string<charT, Allocator>::reserve(size_type res_arg)
+	{ vec.reserve(res_arg); }
+
+	template <class charT, class Allocator>
+	void basic_string<charT, Allocator>::clear()
+	{ vec.clear(); }
+
+	template <class charT, class Allocator>
+	bool basic_string<charT, Allocator>::empty() const
+	{ return vec.empty(); }
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::operator+=(
+		const basic_string<charT, Allocator>& str)
+	{
+		iterator it = str.begin();
+		while(it != str.end())
+		{
+			push_back(*it);
+			it++;
+		}
+		return *this;
+	}	
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::operator+=(const charT* s)
+	{
+		for(size_type i = 0; s[i] != '\0'; i++)
+			push_back(s[i]);
+		return *this;
+	}
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>&  basic_string<charT, Allocator>::operator+=(charT c)
+	{ 
+		push_back(c); 
+		return *this;
+	}
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::append(
+			const basic_string<charT, Allocator>& str)
+	{ return (*this += str); }
+
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::append(
+			const basic_string<charT, Allocator>& str, seize_type pos, size_type n)
+	{
+		while(n > 0)
+			push_back(str[pos++]), n--;
+		return *this;
+	}
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::append(
+			const charT* s, size_type n)
+	{
+		for(size_type i = 0; i < n; i++)
+			push_back(s[i]);
+		return *this;
+	}
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::append(
+			const charT* s)
+	{
+		for(size_type i = 0; s[i] != '\0'; i++)
+			push_back(s[i]);
+		return *this;
+	}
+	
+	template <class charT, class Allocator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::append(
+			size_type n, charT c)
+	{
+		while(n > 0)
+			push_back(c), n--;
+		return *this;
+	}
+		
+	template <class charT, class Allocator>
+	template <class InputIterator>
+	basic_string<charT, Allocator>& basic_string<charT, Allocator>::append(
+			InputIterator first, InputIterator last)
+	{
+		while first != last
+			push_back(*(first++));
+		return *this;
+	}
+	
+	template <class charT, class Allocator>
+	void basic_string<charT, Allocator>::push_back(charT c)
+	{ vec.push_back(c); }
+
+	
 }
 
 #endif
+
+

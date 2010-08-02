@@ -1,3 +1,26 @@
+/*
+ *  Copyright (c) 2010
+ *    Hugo Stefan Kaus Puhlmann <hugopuhlmann@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+*/
+
 #ifndef HUGO_ALLOCATOR_H__
 #define HUGO_ALLOCATOR_H__
 
@@ -76,19 +99,19 @@ namespace htl
 	}
 
 	template <class T>
-	typename allocator<T>::pointer allocator<T>::allocate(size_type x, allocator<void>::const_pointer hint = 0)
+	typename allocator<T>::pointer allocator<T>::allocate(size_type x, allocator<void>::const_pointer hint)
 	{
 		return (T*) new unsigned char[x * sizeof(T*)];
 	}
 
 	template <class T>
-	void allocator<T>::deallocate(pointer p, size_type n = 0)
+	void allocator<T>::deallocate(pointer p, size_type n)
 	{
 		delete[] p;
 	}
 
 	template <class T>
-	size_t allocator<T>::max_size() const
+	size_t allocator<T>::max_size() const throw()
 	{
 		size_type count = (size_type)(-1) / sizeof(T);
 		return (0 < count ? count : 1);

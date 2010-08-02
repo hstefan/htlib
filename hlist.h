@@ -1,8 +1,32 @@
+/*
+ *  Copyright (c) 2010
+ *    Hugo Stefan Kaus Puhlmann <hugopuhlmann@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+*/
+
 #ifndef HUGO_H_LIST__
 #define HUGO_H_LIST__
 
 #include "hallocator.h"
 #include "hlist_node.h"
+#include "hiterator.h"
 
 namespace htl 
 {
@@ -58,25 +82,137 @@ namespace htl
 			template <class S, class U>
 			friend class list;
 
+			template <class I>
+			friend class const_list_iterator;
+
 			hlist_node<T>* ptr;
 		};
-
+		
 		template <class T>
 		list_iterator<T>::list_iterator(hlist_node<T>* i)
-		{
-			ptr = i;
-		}
+		{ ptr = i; }
 
 		template <class T>
-		list_iterator<T>::list_iterator(const list_iterator<T>& it)
-		{
-			ptr = it.ptr;
-		}
+		list_iterator<T>::list_iterator(const list_iterator<T>& it) 
+		{ ptr = it.ptr; }
+		
 		template <class T>
-		list_iterator<T>::list_iterator()
+		list_iterator<T>::list_iterator() 
+		{ ptr = 0; }
+
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(hlist_node<T>* i)
+		{ ptr = i; }
+
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(const const_list_iterator<T>& it) 
+		{ ptr = it.ptr; }
+		
+		template <class T>
+		const_list_iterator<T>::const_list_iterator() 
+		{ ptr = 0; }
+
+		template <class T>
+		class const_list_iterator 
 		{
-			ptr = 0;
-		}
+		public:
+			typedef T*							pointer;
+			typedef const T&					const_reference;
+			typedef T							value_type;
+			typedef unsigned int				diff_type;
+
+			const_list_iterator(hlist_node<T>* i);
+			const_list_iterator(const list_iterator<T>& it);
+			const_list_iterator(const const_list_iterator<T>& cit);
+			const_list_iterator();
+
+			const_list_iterator& operator=(const const_list_iterator<T>& it)
+			{
+				ptr = it.ptr;
+				return *this;
+			}
+			const_list_iterator& operator++()
+			{
+				ptr = ptr->next;
+				return *this;
+			}
+			const_list_iterator operator++(int)
+			{
+				const_list_iterator i = *this;
+				ptr = ptr->next;
+				return i;
+			}
+			const_list_iterator& operator--()
+			{   
+				ptr = ptr->prev;
+				return *this;
+			}
+			const_list_iterator& operator--(int)
+			{
+				const_list_iterator i = *this;
+				ptr = ptr->prev;
+				return i;
+			}
+			bool operator==(const const_list_iterator<T>& it)
+			{ return ptr == it.ptr; }
+			bool operator!=(const const_list_iterator<T>& it)
+			{ return ptr != it.ptr; }
+			const_reference operator*()
+			{ return ptr->value;}
+
+		private:
+			template <class S, class U>
+			friend class list;
+
+			hlist_node<T>* ptr;
+		};
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(hlist_node<T>* i)
+		{ ptr = i; }
+
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(const list_iterator<T>& it) 
+		{ ptr = it.ptr; }
+		
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(const const_list_iterator<T>& it) 
+		{ ptr = it.ptr; }	
+		
+		template <class T>
+		const_list_iterator<T>::const_list_iterator() 
+		{ ptr = 0; }
+
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(hlist_node<T>* i)
+		{ ptr = i; }
+
+		template <class T>
+		const_list_iterator<T>::const_list_iterator(const const_list_iterator<T>& it) 
+		{ ptr = it.ptr; }
+		
+		template <class T>
+		const_list_iterator<T>::const_list_iterator() 
+		{ ptr = 0; }
+
+		template <class T>
+		struct list_iters
+		{
+			list_iterator<T> begin;
+			list_iterator<T> end;
+			const_list_iterator<T> const_begin;
+			const_list_iterator<T> const_end;
+			
+			reverse_iterator<list_iterator<T>> rbegin;
+			reverse_iterator<list_iterator<T>> rend;
+			const_reverse_iterator<list_iterator<T>> const_rbegin;
+			const_reverse_iterator<list_iterator<T>> const_rend;
+
+			list_iters(const list_iterator<T>& _begin, const list_iterator<T>& _end,
+				const reverse_iterator<list_iterator<T>>& _rbegin, const reverse_iterator<list_iterator<T>>& _rend)
+				: begin(_begin), end(_end), const_begin(_begin), const_end(_end), rbegin(_rebegin), rend(_rend),
+				const_rbegin(_begin), const_rend(_end)
+			{};
+		};
 	} 
 
 	template <class T, class Allocator = allocator<T> >
@@ -84,18 +220,18 @@ namespace htl
 	{
 	public:
 		// types:
-		typedef typename Allocator::reference							reference;
-		typedef typename Allocator::const_reference						const_reference;		
-		typedef typename detail::list_iterator<T>						iterator; 
-		typedef typename detail::list_iterator<T>						const_iterator;
-		typedef unsigned int									size_type;
-		typedef unsigned int									difference_type;
-		typedef T										value_type;
-		typedef Allocator									allocator_type;
-		typedef typename Allocator::pointer							pointer;
-		typedef typename Allocator::const_pointer						const_pointer;
-		/*typedef	std::reverse_iterator<iterator>			reverse_iterator;
-		typedef	std::reverse_iterator<const_iterator>	const_reverse_iterator;*/
+		typedef typename Allocator::reference								reference;
+		typedef typename Allocator::const_reference							const_reference;		
+		typedef typename detail::list_iterator<T>							iterator; 
+		typedef typename detail::const_list_iterator<T>						const_iterator;
+		typedef unsigned int												size_type;
+		typedef unsigned int												difference_type;
+		typedef T															value_type;
+		typedef Allocator													allocator_type;
+		typedef typename Allocator::pointer									pointer;
+		typedef typename Allocator::const_pointer							const_pointer;
+		typedef	reverse_iterator<iterator>									reverse_iterator;
+		typedef	reverse_iterator<const_iterator>							const_reverse_iterator;
 
 		//construct/copy/destroy:
 		explicit list(const Allocator& = Allocator());
@@ -120,13 +256,13 @@ namespace htl
 		
 		// iterators:
 		iterator begin();
-		//const_iterator begin() const;
+		const_iterator begin() const;
 		iterator end();
-		//const_iterator end() const;
-		//reverse_iterator rbegin();
-		//const_reverse_iterator rbegin() const;
-		//reverse_iterator rend();
-		//const_reverse_iterator rend() const;
+		const_iterator end() const;
+		reverse_iterator rbegin();
+		const_reverse_iterator rbegin() const;
+		reverse_iterator rend();
+		const_reverse_iterator rend() const;
 		
 		//capacity:
 		bool empty() const;
@@ -180,8 +316,10 @@ namespace htl
 
 		detail::hlist_node<T>* first;
 		detail::hlist_node<T>* last;
+		detail::list_iters<T> m_iterators;
 		size_type m_size;
 		Allocator alloc;
+
 
 		template <typename U>
 		friend class detail::list_iterator;
@@ -266,11 +404,39 @@ namespace htl
 
 	template <class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::begin() 
-	{ return iterator(first); }	
+	{ return m_iterators.begin; }	
 
 	template <class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::end() 
-	{ return iterator(last); }
+	{ return m_iterators.end; }
+
+	template <class T, class Allocator>
+	typename list<T, Allocator>::iterator list<T, Allocator>::end() 
+	{ return m_iterators.end; }
+
+	template <class T, class Allocator>
+	typename list<T, Allocator>::const_iterator list<T, Allocator>::begin() const 
+	{ return m_iterators.const_begin; }
+
+	template <class T, class Allocator>
+	typename list<T, Allocator>::const_iterator list<T, Allocator>::end() const
+	{ return m_iterators.const_end; }
+
+	template <class T, class Allocator>
+	typename list<T, Allocator>::reverse_iterator list<T, Allocator>::rbegin()
+	{ return m_iterators.rbegin; }
+
+	template <class T, class Allocator>
+	typename list<T, Allocator>::reverse_iterator list<T, Allocator>::rend()
+	{ return m_iterators.rend; }
+
+	template <class T, class Allocator>
+	typename list<T, Allocator>::const_reverse_iterator list<T, Allocator>::begin() const
+	{ return m_iterators.const_rbegin; }
+	
+	template <class T, class Allocator>
+	typename list<T, Allocator>::const_reverse_iterator list<T, Allocator>::rend() const
+	{ return m_iterators.const_rend; }
 
 	template <class T, class Allocator>
 	bool list<T, Allocator>::empty() const
@@ -632,9 +798,10 @@ namespace htl
 	void list<T, Allocator>::reverse()
 	{
 		size_type sz = m_size;
+		iterator it = begin();
 		while(sz > 0)
 		{
-			push_back(*begin());
+			push_back(*it++);
 			erase(begin());
 			sz--;
 		}

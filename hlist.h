@@ -101,13 +101,9 @@ namespace htl
 		{ ptr = 0; }
 
 		template <class T>
-		const_list_iterator<T>::const_list_iterator(hlist_node<T>* i)
+		const_list_iterator<T>::list_iterator(hlist_node<T>* i)
 		{ ptr = i; }
-
-		template <class T>
-		const_list_iterator<T>::const_list_iterator(const const_list_iterator<T>& it) 
-		{ ptr = it.ptr; }
-		
+	
 		template <class T>
 		const_list_iterator<T>::const_list_iterator() 
 		{ ptr = 0; }
@@ -316,7 +312,7 @@ namespace htl
 
 		detail::hlist_node<T>* first;
 		detail::hlist_node<T>* last;
-		detail::list_iters<T> m_iterators;
+		detail::list_iters<T>* m_iterators;
 		size_type m_size;
 		Allocator alloc;
 
@@ -326,13 +322,13 @@ namespace htl
 	};
 	template <class T, class Allocator>
 	list<T,Allocator>::list(const Allocator& x)
-		: first(0),  last(0), m_size(0), alloc(x)
+		: first(0),  last(0), m_iterators(0), m_size(0), alloc(x)
 	{}
 
 	template <class T, class Allocator>
 	list<T, Allocator>::list(size_type n, const T& value, 
 		const Allocator& x) 
-		: first(0), last(0), m_size(0), alloc(x)
+		: first(0), last(0), m_iterators(0), m_size(0), alloc(x)
 	{
 		while(n >= 0)
 		{
@@ -345,7 +341,7 @@ namespace htl
 	template <class InputIterator>
 	list<T, Allocator>::list(InputIterator first, InputIterator last,
 		const Allocator& x)
-		: first(0), last(0), m_size(0), alloc(x)
+		: first(0), last(0), m_iterators(0), m_size(0), alloc(x)
 	{
 		while(first != last)
 		{
@@ -357,7 +353,7 @@ namespace htl
 
 	template <class T, class Allocator>
 	list<T, Allocator>::list(const list<T, Allocator>& x)
-		: first(0), last(0), m_size(0), alloc(x.get_allocator())
+		: first(0), last(0), m_iterators(0), m_size(0), alloc(x.get_allocator())
 	{
 		iterator it = x.begin();
 		while(it != x.last())
@@ -377,6 +373,7 @@ namespace htl
 	template <class T, class Allocator>
 	list<T,Allocator>& list<T, Allocator>::operator=(const list<T,Allocator>& x)
 	{
+		clear();
 		for(iterator it = x.begin(); it != x.last(); it++)
 			push_back(*it);
 	}
@@ -385,6 +382,7 @@ namespace htl
 	template <class InputIterator>
 	void list<T, Allocator>::assign(InputIterator first, InputIterator last)
 	{
+		clear();
 		while(first != last)
 		{
 			push_back(*first);
@@ -469,77 +467,31 @@ namespace htl
 	template <class T, class Allocator>
 	void list<T, Allocator>::push_front(const T& x) 
 	{
-		if(first == 0)
-		{
-			first = new detail::hlist_node<T>(x, 0, 0);
-			last = first;
-		}
-		else
-		{
-			detail::hlist_node<T>* n = new detail::hlist_node<T>(x, 0, first);
-			first->prev = n;
-			first = n;
-		}
+		insert(m_iterators->begin, x);
 	}
 
 	template <class T, class Allocator>
 	void list<T, Allocator>::pop_front() 
 	{
-		if(first != 0)
-		{
-			detail::hlist_node<T>* n = first;
-			first = first->next;
-			delete n;
-		}
+		erase(m_iterators->begin);	
 	}
 
 	template <class T, class Allocator>
 	void list<T, Allocator>::push_back(const T& x)
 	{
-		if(last == 0)
-		{
-			first = new detail::hlist_node<T>(x);
-			last = first;
-		}
-		else
-		{
-			detail::hlist_node<T>* n = new detail::hlist_node<T>(x, last, 0);
-			last->next = n;
-			last = n;
-		}
-		m_size++;
+		insert(m_iterators->end, x);
 	}
+
 	template <class T, class Allocator>
 	void list<T, Allocator>::pop_back()
 	{
-		if(last != 0)
-		{
-			detail::hlist_node<T>* n = last;
-			last = last->prev;
-			delete n;
-		}
+		erase(m_iterators->end);
 	}
 
 	template <class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(iterator position)
 	{
-		if(position.ptr != 0)
-		{	
-			if(position.ptr->prev != 0)
-				position.ptr->prev->next = position.ptr->next;
-			else //the element was the first in the list
-				first = position.ptr->next;
-			
-			if(position.ptr->next != 0)
-				position.ptr->next->prev = position.ptr->prev;
-			else //the element was the last in the list
-				last = position.ptr->prev;
-			
-			iterator it(position.ptr->next);
-			delete position.ptr;
-			m_size--;
-			return it;		
-		}
+		//TODO TODO TODO
 	}
 
 	template <class T, class Allocator>
@@ -554,21 +506,7 @@ namespace htl
 	template <class T, class Allocator>
 	typename list<T,Allocator>::iterator list<T, Allocator>::insert(iterator position, const T& x)
 	{
-		if(position.ptr != 0)
-		{
-			detail::hlist_node<T>* node = new detail::hlist_node<T>(x, position.ptr, position.ptr->next);
-			
-			if(position.ptr->next == 0)
-				last = node;
-			if(position.ptr->prev == 0)
-				first = node;
-			
-			position.ptr->next = node;
-			m_size++;
-			return iterator(node);
-		}
-		else
-			return iterator(0);
+		//TODO TODO TODO
 	}
 
 	template <class T, class Allocator>
@@ -585,10 +523,7 @@ namespace htl
 	void list<T, Allocator>::insert(iterator position, InputIterator first, InputIterator last)
 	{
 		while(first != last)
-		{
-			insert(position++, *first);
-			first++;
-		}
+			insert(position++, *first++);
 	}
 
 	template <class T, class Allocator>
@@ -634,8 +569,7 @@ namespace htl
 		while(first != last)
 		{
 			insert(position++, *first);
-			x.erase(first);
-			first++;
+			x.erase(first++);
 		}
 	}
 
@@ -658,7 +592,7 @@ namespace htl
 		iterator it = begin();
 		while(it != end())
 		{
-			if(Predicate(*it))
+			if(pred(*it))
 				erase(it);
 			it++;
 		}
@@ -700,7 +634,7 @@ namespace htl
 		x.sort();
 		sort();
 		iterator it_x = x.begin();
-		iterator it_y = begin();
+		iterator it_y = this->begin();
 		
 		while(it_x != x.end())
 		{
@@ -729,7 +663,7 @@ namespace htl
 		x.sort();
 		sort();
 		iterator it_x = x.begin();
-		iterator it_y = begin();
+		iterator it_y = this->begin();
 		
 		while(it_x != x.end())
 		{

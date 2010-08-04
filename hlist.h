@@ -208,7 +208,7 @@ namespace htl
 				const_rbegin(const_begin), const_rend(const_end)
 			{}
 		};
-	} 
+	} //namespace detail 
 
 	template <class T, class Allocator = allocator<T> >
 	class list 
@@ -526,7 +526,19 @@ namespace htl
 	template <class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(iterator position)
 	{
-		//TODO
+		if(position.ptr == first || position.ptr == last )
+			//TODO handle this exception : can't erase the 'base' nodes 
+			return iterator(position.ptr->next);
+		else
+		{
+			if(position.ptr->prev != 0)
+				position.ptr->prev->next = position.ptr->next;
+			if(position.ptr->next != 0)
+				position.ptr->next->prev = position.ptr->prev;
+			iterator it(position.ptr->next);
+			delete position.ptr;
+			return it;
+		}
 	}
 
 	template <class T, class Allocator>
@@ -541,9 +553,10 @@ namespace htl
 	template <class T, class Allocator>
 	typename list<T,Allocator>::iterator list<T, Allocator>::insert(iterator position, const T& x)
 	{
-		position.ptr->prev = new node(x, position.ptr->prev, position.ptr);
-		_init_iterators();
+		detail::hlist_node<T>* node = new detail::hlist_node<T>(x, position.ptr->prev, position.ptr);
+		position.ptr->prev->next = node; //considering that the user will not pass an null iterator
 		m_size++;
+		return iterator(node);
 	}
 
 	template <class T, class Allocator>

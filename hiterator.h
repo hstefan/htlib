@@ -30,7 +30,7 @@ namespace htl
 	class reverse_iterator
 	{
 	public:
-		typedef typename reference Iter::reference;
+		typedef Iter::reference reference;
 
 		reverse_iterator(const reverse_iterator& rit);
 		reverse_iterator(const Iter& it);

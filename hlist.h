@@ -327,9 +327,9 @@ namespace htl
 		: first(0),  last(0), m_iterators(), m_size(0), alloc(x)
 	{
 		first = new h_list_node(T(), 0, 0);
-		last = first;
-		last->prev = first;
-		first->_next = last;
+		last = new h_list_node(T(), first, 0);
+		first->prev = last;
+		
 		_init_iterators();
 	}
 
@@ -353,9 +353,8 @@ namespace htl
 		: first(0), last(0), m_iterators(), m_size(0), alloc(x)
 	{
 		first = new h_list_node(T(), 0, 0);
-		last = first;
-		last->prev = first;
-		first->_next = last;
+		last = new h_list_node(T(), first, 0);
+		first->prev = last;
 		_init_iterators();
 		while(n >= 0)
 		{
@@ -371,9 +370,8 @@ namespace htl
 		: first(0), last(0), m_iterators(), m_size(0), alloc(x)
 	{
 		first = new h_list_node(T(), 0, 0);
-		last = first;
-		last->prev = first;
-		first->_next = last;
+		last = new h_list_node(T(), first, 0);
+		first->prev = last;
 		_init_iterators();
 		while(first != last)
 		{
@@ -388,9 +386,8 @@ namespace htl
 		: first(0), last(0), m_iterators(), m_size(0), alloc(x.get_allocator())
 	{
 		first = new h_list_node(T(), 0, 0);
-		last = first;
-		last->prev = first;
-		first->_next = last;
+		last = new h_list_node(T(), first, 0);
+		first->prev = last;
 		_init_iterators();
 		
 		iterator it = x.begin();
@@ -476,7 +473,7 @@ namespace htl
 
 	template <class T, class Allocator>
 	bool list<T, Allocator>::empty() const
-	{ return size == 0; }
+	{ return m_size == 0; }
 
 	template <class T, class Allocator>
 	typename list<T, Allocator>::size_type list<T, Allocator>::size() const
@@ -529,7 +526,7 @@ namespace htl
 	template <class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(iterator position)
 	{
-		//TODO TODO TODO
+		//TODO
 	}
 
 	template <class T, class Allocator>
@@ -544,7 +541,9 @@ namespace htl
 	template <class T, class Allocator>
 	typename list<T,Allocator>::iterator list<T, Allocator>::insert(iterator position, const T& x)
 	{
-		//TODO TODO TODO
+		position.ptr->prev = new node(x, position.ptr->prev, position.ptr);
+		_init_iterators();
+		m_size++;
 	}
 
 	template <class T, class Allocator>
@@ -556,6 +555,7 @@ namespace htl
 			n--;
 		}
 	}
+
 	template <class T, class Allocator>
 	template <class InputIterator>
 	void list<T, Allocator>::insert(iterator position, InputIterator first, InputIterator last)

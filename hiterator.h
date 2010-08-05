@@ -30,7 +30,7 @@ namespace htl
 	class reverse_iterator
 	{
 	public:
-		typedef Iter::reference reference;
+		typedef Iter::reference reference_type;
 
 		reverse_iterator(const reverse_iterator& rit);
 		reverse_iterator(const Iter& it);
@@ -42,7 +42,7 @@ namespace htl
 		reverse_iterator& operator--(int);
 		bool operator==(const reverse_iterator<Iter>& rit);
 		bool operator!=(const reverse_iterator<Iter>& rit);
-		reference operator*();
+		reference_type operator*();
 
 	private:
 		Iter _iterator;
@@ -103,31 +103,9 @@ namespace htl
 	{ return _iterator != rit._iterator;}
 
 	template <class Iter>
-	reverse_iterator<Iter>::reference& reverse_iterator<Iter>::operator*()
+	reverse_iterator<Iter>::reference_type reverse_iterator<Iter>::operator*()
 	{ return *_iterator; }
-
-	template <class Iter>
-	class const_reverse_iterator
-	{
-	public:
-		typedef typename const_reference Iter::const_reference;
-
-		const_reverse_iterator(const const_reverse_iterator& rit);
-		const_reverse_iterator(const Iter& it);
-
-		const_reverse_iterator& operator=(const const_reverse_iterator<Iter>& rit);
-		const_reverse_iterator& operator++();
-		const_reverse_iterator& operator++(int);
-		const_reverse_iterator& operator--();
-		const_reverse_iterator& operator--(int);
-		bool operator==(const const_reverse_iterator<Iter>& rit);
-		bool operator!=(const const_reverse_iterator<Iter>& rit);
-		const_reference operator*();
-
-	private:
-		Iter _iterator;
-	};
-
+	
 	template <class Iter>
 	reverse_iterator<Iter>::reverse_iterator(const reverse_iterator<Iter>& rit)
 		: _iterator(rit._iterator)
@@ -172,34 +150,6 @@ namespace htl
 		reverse_iterator it = *this;
 		_iterator--;
 		return *it;
-	}
-	
-	template <class Iter>
-	bool reverse_iterator<Iter>::operator==(reverse_iterator<Iter>& rit)
-	{ return _iterator == rit._iterator;}
-	
-	template <class Iter>
-	bool reverse_iterator<Iter>::operator!=(reverse_iterator<Iter>& rit)
-	{ return _iterator != rit._iterator;}
-
-	template <class Iter>
-	reverse_iterator<Iter>::reference& reverse_iterator<Iter>::operator*()
-	{ return *_iterator; }
-
-	template <class Iter>
-	const_reverse_iterator<Iter>::const_reverse_iterator(const const_reverse_iterator<Iter>& rit)
-		: _iterator(rit._iterator)
-	{}
-
-	template <class Iter>
-	const_reverse_iterator<Iter>::const_reverse_iterator(const Iter& it)
-		: _iterator(it)
-	{}
-
-	template <class Iter>
-	const_reverse_iterator<Iter>& const_reverse_iterator<Iter>::operator=(const reverse_iterator<Iter>& rit)
-	{
-		_iterator = rit._iterator;
 	}
 }
 

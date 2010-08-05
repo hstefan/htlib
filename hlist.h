@@ -37,46 +37,21 @@ namespace htl
 		{
 		public:
 			typedef T*					pointer;
-			typedef T&					reference;
+			typedef T&					reference_type;
 			typedef T					value_type;
 			typedef unsigned int		diff_type;
 			list_iterator(hlist_node<T>* i);
 			list_iterator(const list_iterator<T>& it);
 			list_iterator();
 
-			list_iterator& operator=(const list_iterator<T>& it)
-			{
-				ptr = it.ptr;
-				return *this;
-			}
-			list_iterator& operator++()
-			{
-				ptr = ptr->next;
-				return *this;
-			}
-			list_iterator operator++(int)
-			{
-				list_iterator i = *this;
-				ptr = ptr->next;
-				return i;
-			}
-			list_iterator& operator--()
-			{   
-				ptr = ptr->prev;
-				return *this;
-			}
-			list_iterator& operator--(int)
-			{
-				list_iterator i = *this;
-				ptr = ptr->prev;
-				return i;
-			}
-			bool operator==(const list_iterator<T>& it)
-			{ return ptr == it.ptr; }
-			bool operator!=(const list_iterator<T>& it)
-			{ return ptr != it.ptr; }
-			reference operator*()
-			{ return ptr->value;}
+			list_iterator& operator=(const list_iterator<T>& it);
+			list_iterator& operator++();
+			list_iterator operator++(int);
+			list_iterator& operator--();
+			list_iterator& operator--(int);
+			bool operator==(const list_iterator<T>& it);
+			bool operator!=(const list_iterator<T>& it);
+			reference_type operator*();
 
 		private:
 			template <class S, class U>
@@ -87,6 +62,55 @@ namespace htl
 
 			hlist_node<T>* ptr;
 		};
+
+		template <class T>
+		list_iterator<T>& list_iterator<T>::operator=(const list_iterator<T>& it)
+		{
+			ptr = it.ptr;
+			return *this;
+		}
+
+		template <class T>
+		list_iterator<T>& list_iterator<T>::operator++()
+		{
+			ptr = ptr->next;
+			return *this;
+		}
+
+		template <class T>
+		list_iterator<T> list_iterator<T>::operator++(int)
+		{
+			list_iterator i = *this;
+			ptr = ptr->next;
+			return i;
+		}
+
+		template <class T>
+		list_iterator<T>& list_iterator<T>::operator--()
+		{   
+			ptr = ptr->prev;
+			return *this;
+		}
+
+		template <class T>
+		list_iterator<T>& list_iterator<T>::operator--(int)
+		{
+			list_iterator i = *this;
+			ptr = ptr->prev;
+			return i;
+		}
+
+		template <class T>
+		bool list_iterator<T>::operator==(const list_iterator<T>& it)
+		{ return ptr == it.ptr; }
+		
+		template <class T>
+		bool list_iterator<T>::operator!=(const list_iterator<T>& it)
+		{ return ptr != it.ptr; }
+		
+		template <class T>
+		typename list_iterator<T>::reference_type list_iterator<T>::operator*()
+		{ return ptr->value;}
 		
 		template <class T>
 		list_iterator<T>::list_iterator(hlist_node<T>* i)
@@ -98,22 +122,14 @@ namespace htl
 		
 		template <class T>
 		list_iterator<T>::list_iterator() 
-		{ ptr = 0; }
-
-		template <class T>
-		const_list_iterator<T>::list_iterator(hlist_node<T>* i)
-		{ ptr = i; }
-	
-		template <class T>
-		const_list_iterator<T>::const_list_iterator() 
-		{ ptr = 0; }
+		{ ptr = 0; }	
 
 		template <class T>
 		class const_list_iterator 
 		{
 		public:
 			typedef T*							pointer;
-			typedef const T&					const_reference;
+			typedef const T&					reference_type;
 			typedef T							value_type;
 			typedef unsigned int				diff_type;
 
@@ -122,39 +138,14 @@ namespace htl
 			const_list_iterator(const const_list_iterator<T>& cit);
 			const_list_iterator();
 
-			const_list_iterator& operator=(const const_list_iterator<T>& it)
-			{
-				ptr = it.ptr;
-				return *this;
-			}
-			const_list_iterator& operator++()
-			{
-				ptr = ptr->next;
-				return *this;
-			}
+			const_list_iterator& operator=(const const_list_iterator<T>& it);
+			const_list_iterator& operator++();
 			const_list_iterator operator++(int)
-			{
-				const_list_iterator i = *this;
-				ptr = ptr->next;
-				return i;
-			}
-			const_list_iterator& operator--()
-			{   
-				ptr = ptr->prev;
-				return *this;
-			}
-			const_list_iterator& operator--(int)
-			{
-				const_list_iterator i = *this;
-				ptr = ptr->prev;
-				return i;
-			}
-			bool operator==(const const_list_iterator<T>& it)
-			{ return ptr == it.ptr; }
-			bool operator!=(const const_list_iterator<T>& it)
-			{ return ptr != it.ptr; }
-			const_reference operator*()
-			{ return ptr->value;}
+			const_list_iterator& operator--();
+			const_list_iterator& operator--(int);
+			bool operator==(const const_list_iterator<T>& it);
+			bool operator!=(const const_list_iterator<T>& it);
+			const_reference operator*();
 
 		private:
 			template <class S, class U>
@@ -162,6 +153,55 @@ namespace htl
 
 			hlist_node<T>* ptr;
 		};
+		template <class T>
+		const_list_iterator<T>& const_list_iterator<T>::operator=(const const_list_iterator<T>& it)
+		{
+			ptr = it.ptr;
+			return *this;
+		}
+
+		template <class T>
+		const_list_iterator<T>& const_list_iterator<T>::operator++()
+		{
+			ptr = ptr->next;
+			return *this;
+		}
+
+		template <class T>
+		const_list_iterator<T> const_list_iterator<T>::operator++(int)
+		{
+			list_iterator i = *this;
+			ptr = ptr->next;
+			return i;
+		}
+
+		template <class T>
+		const_list_iterator<T>& const_list_iterator<T>::operator--()
+		{   
+			ptr = ptr->prev;
+			return *this;
+		}
+
+		template <class T>
+		const_list_iterator<T>& const_list_iterator<T>::operator--(int)
+		{
+			list_iterator i = *this;
+			ptr = ptr->prev;
+			return i;
+		}
+
+		template <class T>
+		bool const_list_iterator<T>::operator==(const const_list_iterator<T>& it)
+		{ return ptr == it.ptr; }
+		
+		template <class T>
+		bool const_list_iterator<T>::operator!=(const const_list_iterator<T>& it)
+		{ return ptr != it.ptr; }
+		
+		template <class T>
+		typename const_list_iterator<T>::reference_type const_list_iterator<T>::operator*()
+		{ return ptr->value; }
+		
 		template <class T>
 		const_list_iterator<T>::const_list_iterator(hlist_node<T>* i)
 		{ ptr = i; }
@@ -176,19 +216,7 @@ namespace htl
 		
 		template <class T>
 		const_list_iterator<T>::const_list_iterator() 
-		{ ptr = 0; }
-
-		template <class T>
-		const_list_iterator<T>::const_list_iterator(hlist_node<T>* i)
-		{ ptr = i; }
-
-		template <class T>
-		const_list_iterator<T>::const_list_iterator(const const_list_iterator<T>& it) 
-		{ ptr = it.ptr; }
-		
-		template <class T>
-		const_list_iterator<T>::const_list_iterator() 
-		{ ptr = 0; }
+		{ ptr = 0; }	
 
 		template <class T>
 		struct list_iters
@@ -200,8 +228,8 @@ namespace htl
 			
 			reverse_iterator<list_iterator<T>> rbegin;
 			reverse_iterator<list_iterator<T>> rend;
-			const_reverse_iterator<list_iterator<T>> const_rbegin;
-			const_reverse_iterator<list_iterator<T>> const_rend;
+			reverse_iterator< const_list_iterator<T> > const_rbegin;
+			reverse_iterator< const_list_iterator<T> > const_rend;
 
 			list_iters()
 				: begin(0), end(0), const_begin(0), const_end(0), rbegin(begin), rend(end),
